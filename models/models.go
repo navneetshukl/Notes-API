@@ -8,3 +8,9 @@ type User struct {
 	Email    string `gorm:"unique"`
 	Password string
 }
+type Notes struct {
+	gorm.Model
+	Email       string
+	Title       string `gorm:"unique"`
+	Description string
+}

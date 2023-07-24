@@ -34,4 +34,5 @@ func MigrateDatabase() {
 		return
 	}
 	DB.AutoMigrate(&models.User{})
+	DB.AutoMigrate(&models.Notes{})
 }
