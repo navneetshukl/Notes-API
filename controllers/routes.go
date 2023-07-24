@@ -101,22 +101,37 @@ func GetNote(c *gin.Context) {
 
 func UpdateNote(c *gin.Context) {
 	var body struct {
-		Title       string `json:"title"`
 		Description string `json:"description"`
 	}
 	c.Bind(&body)
+	title := c.Param("title")
 	DB, _ := database.ConnectToDatabase()
-	var notes models.Notes
-	DB.Find(&notes, "title=?", title)
 
-	if notes.ID == 0 {
+	// Find the existing note
+	var notes models.Notes
+	result := DB.Where("title = ?", title).First(&notes)
+	if result.Error != nil {
 		errorMessage := fmt.Sprintf("No Notes present for %s", title)
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": errorMessage,
 		})
-	} else{
-		
+		return
 	}
 
+	// Update the description
+	notes.Description = body.Description
 
+	// Save the updated note
+	result = DB.Save(&notes)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Unable to update note",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":       "Note updated successfully",
+		"updated_note": notes, // This will include the updated note details in the response
+	})
 }

@@ -19,6 +19,7 @@ func main() {
 	r.GET("/getnotes", middleware.Auth, controllers.GetNotes)
 	r.POST("/insertnote", middleware.Auth,controllers.InsertNote)
 	r.GET("/getnote/:title", middleware.Auth,controllers.GetNote)
+	r.PUT("/updatenote/:title", middleware.Auth,controllers.UpdateNote)
 
 	r.Run()
 }
