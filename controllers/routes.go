@@ -73,6 +73,9 @@ func InsertNote(c *gin.Context) {
 		})
 		return
 	}
+	c.JSON(http.StatusOK,gin.H{
+		"message":"Note Inserted successfully",
+	})
 
 }
 
@@ -134,4 +137,14 @@ func UpdateNote(c *gin.Context) {
 		"success":       "Note updated successfully",
 		"updated_note": notes, // This will include the updated note details in the response
 	})
+}
+func DeleteNotes(c *gin.Context){
+	_,email:=GetEmail(c)
+	var notes models.Notes
+	DB,_:=database.ConnectToDatabase()
+	if err := DB.Where("email=?", email).Delete(&notes).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete records"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"message": "Records deleted successfully"})
 }

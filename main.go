@@ -20,6 +20,7 @@ func main() {
 	r.POST("/insertnote", middleware.Auth,controllers.InsertNote)
 	r.GET("/getnote/:title", middleware.Auth,controllers.GetNote)
 	r.PUT("/updatenote/:title", middleware.Auth,controllers.UpdateNote)
+	r.DELETE("/deletenotes",middleware.Auth,controllers.DeleteNotes)
 
 	r.Run()
 }
