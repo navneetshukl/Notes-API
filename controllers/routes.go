@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func GetEmail(c *gin.Context) (string, string) {
@@ -62,7 +63,7 @@ func InsertNote(c *gin.Context) {
 	_, email := GetEmail(c)
 	notes := models.Notes{
 		Email:       email,
-		Heading: email+body.Title,
+		Heading:     email + body.Title,
 		Title:       body.Title,
 		Description: body.Description,
 	}
@@ -74,8 +75,8 @@ func InsertNote(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK,gin.H{
-		"message":"Note Inserted successfully",
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Note Inserted successfully",
 	})
 
 }
@@ -85,10 +86,10 @@ func GetNote(c *gin.Context) {
 	/*c.JSON(200,gin.H{
 		"Title":title,
 	})*/
-	_,email:=GetEmail(c)
+	_, email := GetEmail(c)
 	DB, _ := database.ConnectToDatabase()
 	var notes models.Notes
-	heading:=email+title
+	heading := email + title
 	DB.Find(&notes, "heading=?", heading)
 
 	if notes.ID == 0 {
@@ -111,9 +112,9 @@ func UpdateNote(c *gin.Context) {
 	}
 	c.Bind(&body)
 	title := c.Param("title")
-	_,email:=GetEmail(c)
+	_, email := GetEmail(c)
 	DB, _ := database.ConnectToDatabase()
-	heading:=email+title
+	heading := email + title
 
 	// Find the existing note
 	var notes models.Notes
@@ -139,17 +140,43 @@ func UpdateNote(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success":       "Note updated successfully",
+		"success":      "Note updated successfully",
 		"updated_note": notes, // This will include the updated note details in the response
 	})
 }
-func DeleteNotes(c *gin.Context){
-	_,email:=GetEmail(c)
+func DeleteNotes(c *gin.Context) {
+	_, email := GetEmail(c)
 	var notes models.Notes
-	DB,_:=database.ConnectToDatabase()
+	DB, _ := database.ConnectToDatabase()
 	if err := DB.Where("email=?", email).Delete(&notes).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete records"})
-        return
-    }
-    c.JSON(http.StatusOK, gin.H{"message": "Records deleted successfully"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete records"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Records deleted successfully"})
+}
+
+func DeleteNote(c *gin.Context) {
+	_, email := GetEmail(c)
+	title := c.Param("title")
+	heading := email + title
+
+	DB, _ := database.ConnectToDatabase()
+
+	var note models.Notes
+	result := DB.Where("heading = ?", heading).First(&note)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "note not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch note"})
+		return
+	}
+
+	if err := DB.Delete(&note).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete note"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "note deleted successfully"})
 }
