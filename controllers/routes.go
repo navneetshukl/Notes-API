@@ -62,6 +62,7 @@ func InsertNote(c *gin.Context) {
 	_, email := GetEmail(c)
 	notes := models.Notes{
 		Email:       email,
+		Heading: email+body.Title,
 		Title:       body.Title,
 		Description: body.Description,
 	}
@@ -84,9 +85,11 @@ func GetNote(c *gin.Context) {
 	/*c.JSON(200,gin.H{
 		"Title":title,
 	})*/
+	_,email:=GetEmail(c)
 	DB, _ := database.ConnectToDatabase()
 	var notes models.Notes
-	DB.Find(&notes, "title=?", title)
+	heading:=email+title
+	DB.Find(&notes, "heading=?", heading)
 
 	if notes.ID == 0 {
 		errorMessage := fmt.Sprintf("No Notes present for %s", title)
@@ -108,11 +111,13 @@ func UpdateNote(c *gin.Context) {
 	}
 	c.Bind(&body)
 	title := c.Param("title")
+	_,email:=GetEmail(c)
 	DB, _ := database.ConnectToDatabase()
+	heading:=email+title
 
 	// Find the existing note
 	var notes models.Notes
-	result := DB.Where("title = ?", title).First(&notes)
+	result := DB.Where("heading = ?", heading).First(&notes)
 	if result.Error != nil {
 		errorMessage := fmt.Sprintf("No Notes present for %s", title)
 		c.JSON(http.StatusNotFound, gin.H{
